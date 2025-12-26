@@ -1,4 +1,4 @@
-# Conhecendo e Instalando o Docker
+# Aplicações Práticas da Inteligência Artificial
 
 ## Descrição
 

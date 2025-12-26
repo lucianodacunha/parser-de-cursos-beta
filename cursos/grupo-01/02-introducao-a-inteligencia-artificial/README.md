@@ -1,4 +1,4 @@
-# Processamento, Logs e Rede com Docker
+# Introdução à Inteligência Artificial
 
 ## Descrição
 
