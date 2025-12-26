@@ -136,6 +136,24 @@ Diretório para armazenar arquivos e recursos do curso **{nome_curso}**.
     
     return nome_dir
 
+def criar_readme_modulo(modulo_info):
+    """Cria README.md com índice de cursos para um módulo específico"""
+    nome_modulo = modulo_info['nome']
+    cursos = modulo_info['cursos']
+    
+    readme = f"""# {nome_modulo}
+
+## Índice de Cursos
+
+"""
+    
+    for idx, curso in enumerate(cursos, 1):
+        dir_curso = curso['diretorio']
+        nome_curso = curso['nome']
+        readme += f"{idx}. [{nome_curso}](./{dir_curso}/)\n"
+    
+    return readme
+
 def main():
     """Função principal"""
     # Lê o arquivo HTML
@@ -205,6 +223,10 @@ def main():
                     'nome': nome_curso,
                     'diretorio': nome_dir_curso
                 })
+            
+            # Cria README.md com índice de cursos para o módulo
+            readme_modulo = criar_readme_modulo(info_modulo)
+            (diretorio_modulo / 'README.md').write_text(readme_modulo, encoding='utf-8')
             
             indice_modulo_readme.append(info_modulo)
         
