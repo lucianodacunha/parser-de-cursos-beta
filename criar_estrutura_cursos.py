@@ -9,6 +9,24 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 
+def extrair_modulos_do_html(html):
+    """
+    Extrai os nomes dos módulos do HTML seguindo o padrão do parser_modulos.py
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    modulos = []
+    for buttons in soup.select("div.sc-fJKILO"):
+        for button in buttons:
+            texto = button.get_text(strip=True)
+            # Remove a parte "X atividades" do final usando regex
+            import re
+            # Remove dígitos seguidos de "atividades" no final
+            texto_limpo = re.sub(r'\d+\s*atividades$', '', texto).strip()
+            if texto_limpo:
+                modulos.append(texto_limpo)
+    return modulos
+
+
 def extrair_cursos_do_html(html):
     """
     Extrai os nomes dos cursos do HTML seguindo o padrão do parser_cursos.py
@@ -76,13 +94,15 @@ def criar_estrutura_curso(nome_curso, numero, diretorio_base='cursos'):
     print(f"  ✓ Criado: {readme_path}")
 
 
-def main(lista_htmls=None):
+def main(lista_htmls=None, html_modulos=None):
     """
     Extrai os nomes dos cursos de uma lista de HTMLs e cria a estrutura de diretórios.
-    Cada HTML gera seus cursos em uma pasta separada (grupo-01, grupo-02, etc.)
+    Cada HTML gera seus cursos em uma pasta separada.
     
     Args:
-        lista_htmls: Lista de strings HTML. Se None, usa um HTML de exemplo.
+        lista_htmls: Lista de strings HTML com cursos. Se None, usa um HTML de exemplo.
+        html_modulos: String HTML com módulos/grupos. Se fornecido, usa os nomes dos módulos
+                      como nomes das pastas. Se None, usa "grupo-01", "grupo-02", etc.
     """
     # Se não for fornecida uma lista de HTMLs, usa um exemplo
     if lista_htmls is None:
@@ -92,7 +112,14 @@ def main(lista_htmls=None):
             """
         ]
     
-    print(f"\n📚 Processando {len(lista_htmls)} HTML(s)\n")
+    # Extrai nomes dos módulos se fornecido
+    nomes_modulos = []
+    if html_modulos:
+        nomes_modulos = extrair_modulos_do_html(html_modulos)
+        print(f"\n📚 Processando {len(lista_htmls)} HTML(s) com {len(nomes_modulos)} módulo(s) definido(s)\n")
+    else:
+        print(f"\n📚 Processando {len(lista_htmls)} HTML(s)\n")
+    
     print("=" * 60)
     
     # Processa cada HTML separadamente, criando uma pasta para cada grupo
@@ -103,10 +130,16 @@ def main(lista_htmls=None):
             print(f"\n⚠️  Grupo {idx_grupo}: Nenhum curso encontrado, pulando...")
             continue
         
-        # Define o diretório base para este grupo
-        diretorio_grupo = f"cursos/grupo-{idx_grupo:02d}"
+        # Define o nome do grupo
+        if nomes_modulos and idx_grupo <= len(nomes_modulos):
+            nome_grupo = criar_slug(nomes_modulos[idx_grupo - 1])
+            diretorio_grupo = f"cursos/{idx_grupo:02d}-{nome_grupo}"
+            print(f"\n📂 Módulo {idx_grupo}: {nomes_modulos[idx_grupo - 1]}")
+        else:
+            diretorio_grupo = f"cursos/grupo-{idx_grupo:02d}"
+            print(f"\n📂 Grupo {idx_grupo}")
         
-        print(f"\n📂 Grupo {idx_grupo}: {len(cursos)} curso(s) encontrado(s)")
+        print(f"   {len(cursos)} curso(s) encontrado(s)")
         print("-" * 60)
         
         # Cria a estrutura para cada curso deste grupo
